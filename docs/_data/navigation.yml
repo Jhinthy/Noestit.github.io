@@ -15,7 +15,7 @@
       - title: "Coding Conventions"
         url: /editorconfig/coding-conventions
 
- codeconvetions:
+ codeconventions:
    - title: "Code Conventions"
      children:
       - title: "Main"

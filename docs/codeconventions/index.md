@@ -4,7 +4,7 @@ title: 'Noest coding conventions'
 permalink: /codeconventions/index
 
 sidebar:
-  nav: "codeconvetions"
+  nav: "codeconventions"
 ---
 
 # Welcome to the Noest code conventions
