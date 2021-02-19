@@ -1,0 +1,78 @@
+<h2 id="globalization">Globalization</h2>
+
+<p>A lot of web applications have translations available for their users. For example, in Belgium it is common to provide Dutch/Englisch/French translations.
+Using resources to store translations also prevents hardcoded <code class="language-plaintext highlighter-rouge">strings</code> in your views.</p>
+
+<p>In order to externalize these translations in the form of <code class="language-plaintext highlighter-rouge">Resources</code>, we create a separate <code class="language-plaintext highlighter-rouge">Class Library</code> that store these resources and use the appropriate translations depending on the users <code class="language-plaintext highlighter-rouge">culture</code>.</p>
+
+<p>For each language we add a <code class="language-plaintext highlighter-rouge">LANGUAGE.resx</code> resource file inside the resources <code class="language-plaintext highlighter-rouge">class library</code>.</p>
+
+<p><strong>English</strong></p>
+
+<p><img src="./../assets/resxeng.png" alt="English resources" /></p>
+
+<p><strong>Dutch</strong></p>
+
+<p><img src="./../assets/resxnl.png" alt="Nederlands resources" /></p>
+
+<ul>
+  <li>Note that the resource name of correspondending translations must be the same.</li>
+</ul>
+
+<p><strong>ResX Manager Visual Studio Extension</strong></p>
+
+<p>With <code class="language-plaintext highlighter-rouge">ResXManager</code> you can manage all resources in one view. Updated example of our demo application.</p>
+
+<p>Download
+<a href="https://haacked.com/archive/2011/01/06/razor-syntax-quick-reference.aspx/">ResXManager</a>.</p>
+
+<p><img src="./../assets/Resxmanager.png" alt="ResXManager" /></p>
+
+<p>Inside our application, we can replace all hardcoded string with these translations. Below is an example of calling resources in our <code class="language-plaintext highlighter-rouge">user</code> table.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">&lt;</span><span class="n">h2</span><span class="p">&gt;</span><span class="n">Users</span><span class="p">&lt;/</span><span class="n">h2</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="n">div</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="n">table</span> <span class="k">class</span><span class="err">="</span><span class="nc">table</span><span class="s">"&gt;
+</span>        <span class="p">&lt;</span><span class="n">tr</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="n">th</span> <span class="n">scope</span><span class="p">=</span><span class="s">"col"</span><span class="p">&gt;</span><span class="n">@Resources</span><span class="p">.</span><span class="n">Global</span><span class="p">.</span><span class="n">Nickname</span><span class="p">&lt;/</span><span class="n">th</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="n">th</span> <span class="n">scope</span><span class="p">=</span><span class="s">"col"</span><span class="p">&gt;</span><span class="n">@Resources</span><span class="p">.</span><span class="n">Global</span><span class="p">.</span><span class="n">Fullname</span><span class="p">&lt;/</span><span class="n">th</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="n">th</span> <span class="n">scope</span><span class="p">=</span><span class="s">"col"</span><span class="p">&gt;</span><span class="n">@Resources</span><span class="p">.</span><span class="n">Global</span><span class="p">.</span><span class="n">Emailaddress</span><span class="p">&lt;/</span><span class="n">th</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="n">th</span> <span class="n">scope</span><span class="p">=</span><span class="s">"col"</span><span class="p">&gt;</span><span class="n">@Resources</span><span class="p">.</span><span class="n">Global</span><span class="p">.</span><span class="n">Role</span><span class="p">&lt;/</span><span class="n">th</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="n">th</span> <span class="n">scope</span><span class="p">=</span><span class="s">"col"</span><span class="p">&gt;</span><span class="n">@Resources</span><span class="p">.</span><span class="n">Global</span><span class="p">.</span><span class="n">Actions</span><span class="p">&lt;/</span><span class="n">th</span><span class="p">&gt;</span>
+        <span class="p">&lt;/</span><span class="n">tr</span><span class="p">&gt;</span>
+        <span class="nf">@foreach</span> <span class="p">(</span><span class="kt">var</span> <span class="n">user</span> <span class="k">in</span> <span class="n">Model</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">@Html</span><span class="p">.</span><span class="nf">Partial</span><span class="p">(</span><span class="s">"_UserPartial"</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">&lt;/</span><span class="n">table</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="n">div</span><span class="p">&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Data Annotations example</strong></p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">class</span> <span class="nc">CreateUserViewModel</span>
+<span class="p">{</span>
+    <span class="p">[</span><span class="nf">DisplayName</span><span class="p">(</span><span class="n">Resources</span><span class="p">.</span><span class="n">Name</span><span class="p">)]</span>
+    <span class="p">[</span><span class="nf">Required</span><span class="p">(</span><span class="n">ErrorMessage</span><span class="p">=</span><span class="n">Resources</span><span class="p">.</span><span class="n">NameRequiredMessage</span><span class="p">)]</span>
+    <span class="p">[</span><span class="nf">MaxLength</span><span class="p">(</span><span class="m">100</span><span class="p">)]</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">Name</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<ul>
+  <li>In above example, the <code class="language-plaintext highlighter-rouge">errorMessage</code> will show the correct message, depending on user’s selected culture.</li>
+</ul>
+
+<p>The <code class="language-plaintext highlighter-rouge">DisplayName</code> attribute in above example is what will be displayed on the <code class="language-plaintext highlighter-rouge">View</code> when calling that property name.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> @Html.LabelFor(model =&gt; model.Name)
+@Html.ValidationMessageFor(model =&gt; model.Name)
+</code></pre></div></div>
+
+<ul>
+  <li>
+    <p>Above ` HTML helpers` will display the correct translation depending on browser language / culture settings.</p>
+  </li>
+  <li>
+    <p>You can use translations for every string on your application. You can store full paragraphs if needed. Just add the reference to the resources library and you can use them in your view simply by calling <code class="language-plaintext highlighter-rouge">@Resources.ResourceName</code></p>
+  </li>
+</ul>

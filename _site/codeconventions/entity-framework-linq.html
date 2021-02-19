@@ -1,0 +1,203 @@
+<h2 id="introduction">Introduction</h2>
+
+<p>This article describes some best practices and performance improving principles when using Entity Framework. In most of our applications, LINQ syntax is used to retrieve data from different sources. The built-in LINQ engine translates these queries into raw SQL queries. There are a few conventions and best practices that ensure a much better application performance when communicating with the database.</p>
+
+<h2 id="linq-syntax">LINQ syntax</h2>
+
+<p>There are two ways to write LINQ queries</p>
+
+<ul>
+  <li>LINQ Query Expression</li>
+  <li>LINQ Extension Methods (method based queries)</li>
+</ul>
+
+<p>At Sweet Mustard, we aim to always use <strong>LINQ Extension Methods</strong>. Method based queries are very readable and allow you to use custom extension methods that will still read fine. Since not all operators are available when using LINQ Query Expressions, you quickly end up with a mixed syntax.</p>
+
+<h3 id="linq-query-example">LINQ Query example</h3>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">query</span> <span class="p">=</span> <span class="p">(</span><span class="k">from</span> <span class="n">p</span> <span class="k">in</span> <span class="n">dbContext</span><span class="p">.</span><span class="n">Products</span><span class="p">.</span><span class="nf">AsNoTracking</span><span class="p">()</span>
+             <span class="k">where</span> <span class="n">p</span><span class="p">.</span><span class="n">Name</span><span class="p">.</span><span class="nf">Contains</span><span class="p">(</span><span class="s">"foo"</span><span class="p">)</span>
+             <span class="k">orderby</span> <span class="n">c</span><span class="p">.</span><span class="n">Name</span>
+             <span class="k">select</span> <span class="n">p</span><span class="p">).</span><span class="nf">Into</span><span class="p">(</span><span class="s">"MyTable"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<h3 id="linq-exentsion-method-example">LINQ Exentsion Method example</h3>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">query</span> <span class="p">=</span> <span class="n">dbContext</span><span class="p">.</span><span class="n">Products</span>
+    <span class="p">.</span><span class="nf">AsNoTracking</span><span class="p">()</span>
+    <span class="p">.</span><span class="nf">Where</span><span class="p">(</span><span class="n">p</span> <span class="p">=&gt;</span> <span class="n">p</span><span class="p">.</span><span class="n">Name</span><span class="p">.</span><span class="nf">Contains</span><span class="p">(</span><span class="s">"foo"</span><span class="p">))</span>
+    <span class="p">.</span><span class="nf">OrderBy</span><span class="p">(</span><span class="n">p</span> <span class="p">=&gt;</span> <span class="n">p</span><span class="p">.</span><span class="n">Name</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">Into</span><span class="p">(</span><span class="s">"MyTable"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<h2 id="eager-loading-vs-lazy-loading-vs-explicit-loading">Eager Loading vs Lazy Loading vs Explicit Loading</h2>
+
+<p>Entity Framework supports multiple ways to load related entities (that is, when a relation is defined in the models).</p>
+
+<h3 id="when-to-use-eager-loading">When to use Eager Loading</h3>
+
+<ul>
+  <li>In one side of a one-to-many relationship where you always need the related entity, f.e. the category of a product.</li>
+  <li>Generally when relations are not too heavy, eager loading will reduce the amount of queries sent to the server.</li>
+</ul>
+
+<h4 id="example">Example</h4>
+
+<p>You have a <code class="language-plaintext highlighter-rouge">User</code> table and a <code class="language-plaintext highlighter-rouge">UserDetails</code> table, the LINQ query below will fetch a single <code class="language-plaintext highlighter-rouge">User</code> entity including the related <code class="language-plaintext highlighter-rouge">UserDetails</code> entity/entities at once.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">user</span> <span class="p">=</span> <span class="n">dbContext</span><span class="p">.</span><span class="n">Users</span>
+    <span class="p">.</span><span class="nf">AsNoTracking</span><span class="p">()</span>
+    <span class="p">.</span><span class="nf">Include</span><span class="p">(</span><span class="n">a</span> <span class="p">=&gt;</span> <span class="n">a</span><span class="p">.</span><span class="n">UserDetails</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">FirstOrDefault</span><span class="p">(</span><span class="n">a</span> <span class="p">=&gt;</span> <span class="n">a</span><span class="p">.</span><span class="n">UserId</span> <span class="p">==</span> <span class="n">userId</span><span class="p">);</span>
+</code></pre></div></div>
+
+<h3 id="when-to-use-lazy-loading">When to use Lazy Loading</h3>
+
+<ul>
+  <li>Almost on every ‘collection side’ of one-to-many relations, f.e. products of a category.</li>
+  <li>You know exactly you will not need a property.</li>
+</ul>
+
+<p><strong>Example</strong></p>
+
+<p>The LINQ query below does not return the <code class="language-plaintext highlighter-rouge">UserDetails</code> entity/entities along with the <code class="language-plaintext highlighter-rouge">User</code> unless the property gets explicitly read.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">user</span> <span class="p">=</span> <span class="n">dbContext</span><span class="p">.</span><span class="n">Users</span>
+    <span class="p">.</span><span class="nf">AsNoTracking</span><span class="p">()</span>
+    <span class="p">.</span><span class="nf">FirstOrDefault</span><span class="p">(</span><span class="n">a</span> <span class="p">=&gt;</span> <span class="n">a</span><span class="p">.</span><span class="n">UserId</span> <span class="p">==</span> <span class="n">userId</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">UserDetails</code> will only be loaded when you explicit call for it:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">UserDetails</span> <span class="n">userDetails</span> <span class="p">=</span> <span class="n">user</span><span class="p">.</span><span class="n">UserDetails</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Lazy loading can cause weird side effects and slow down you application as multiple database queries get executed behind the scenes. Therefore we do not recommend using lazy loading.</p>
+
+<h3 id="when-to-use-explicit-loading">When to use Explicit Loading</h3>
+
+<p>After disabling lazy loading in Entity Framework, there’s still a way to load related entities by explicitly calling the <code class="language-plaintext highlighter-rouge">Load</code> method. There are two ways to use the <code class="language-plaintext highlighter-rouge">Load</code> method: Reference (load a single navigation property) and Collection (to load collection).</p>
+
+<h4 id="example-1">Example</h4>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">user</span> <span class="p">=</span> <span class="n">dbContext</span><span class="p">.</span><span class="n">Users</span>
+    <span class="p">.</span><span class="nf">AsNoTracking</span><span class="p">()</span>
+    <span class="p">.</span><span class="nf">FirstOrDefault</span><span class="p">(</span><span class="n">a</span> <span class="p">=&gt;</span> <span class="n">a</span><span class="p">.</span><span class="n">UserId</span> <span class="p">==</span> <span class="n">userId</span><span class="p">);</span>
+
+<span class="c1">// Reference (when there's only one UserDetails entity per user)</span>
+<span class="n">dbContext</span><span class="p">.</span><span class="nf">Entry</span><span class="p">(</span><span class="n">user</span><span class="p">).</span><span class="nf">Reference</span><span class="p">(</span><span class="n">u</span> <span class="p">=&gt;</span> <span class="n">u</span><span class="p">.</span><span class="n">UserDetails</span><span class="p">).</span><span class="nf">Load</span><span class="p">();</span>
+
+<span class="c1">// Collection (when there are many UserDetails entryies per user)</span>
+<span class="n">dbContext</span><span class="p">.</span><span class="nf">Entry</span><span class="p">(</span><span class="n">user</span><span class="p">).</span><span class="nf">Reference</span><span class="p">(</span><span class="n">u</span> <span class="p">=&gt;</span> <span class="n">u</span><span class="p">.</span><span class="n">UserDetails</span><span class="p">).</span><span class="nf">Load</span><span class="p">();</span>
+</code></pre></div></div>
+
+<h2 id="entity-identity-management">Entity Identity Management</h2>
+
+<p>Only query the data you need is the golden rule to make performant queries.</p>
+
+<p>F.e. when you need a list of all first- and lastnames for all users, you want to limit the data that needs to be transferred by only getting the <code class="language-plaintext highlighter-rouge">Id</code>, <code class="language-plaintext highlighter-rouge">FirstName</code> and <code class="language-plaintext highlighter-rouge">LastName</code> column data:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Good</span>
+<span class="kt">var</span> <span class="n">users</span> <span class="p">=</span> <span class="n">dbContext</span><span class="p">.</span><span class="n">User</span>
+    <span class="p">.</span><span class="nf">AsNoTracking</span><span class="p">()</span>
+    <span class="p">.</span><span class="nf">Select</span><span class="p">(</span><span class="n">user</span> <span class="p">=&gt;</span> <span class="k">new</span>
+    <span class="p">{</span>
+        <span class="n">Id</span> <span class="p">=</span> <span class="n">user</span><span class="p">.</span><span class="n">Id</span><span class="p">,</span>
+        <span class="n">FirstName</span> <span class="p">=</span> <span class="n">user</span><span class="p">.</span><span class="n">FirstName</span><span class="p">,</span>
+        <span class="n">LastName</span> <span class="p">=</span> <span class="n">user</span><span class="p">.</span><span class="n">LastName</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nf">ToArray</span><span class="p">();</span>
+
+<span class="c1">// Bad</span>
+<span class="kt">var</span> <span class="n">users</span> <span class="p">=</span> <span class="n">dbContext</span><span class="p">.</span><span class="n">User</span>
+    <span class="p">.</span><span class="nf">AsNoTracking</span><span class="p">()</span>
+    <span class="p">.</span><span class="nf">ToArray</span><span class="p">();</span>
+</code></pre></div></div>
+
+<h2 id="filter-data">Filter data</h2>
+
+<p>You can filter the data to be retrieved using <code class="language-plaintext highlighter-rouge">DataLoadOptions.AssociateWith</code> so that only the required data is returned. Following example shows how <code class="language-plaintext highlighter-rouge">DataLoadOptions</code> can be used:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">using</span> <span class="p">(</span><span class="kt">var</span> <span class="n">dataContext</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">MyDbContext</span><span class="p">())</span>
+<span class="p">{</span>
+    <span class="kt">var</span> <span class="n">dataLoadOptions</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">DataLoadOptions</span><span class="p">();</span>
+    <span class="n">dataLoadOptions</span><span class="p">.</span><span class="n">AssociateWith</span><span class="p">&lt;</span><span class="n">Customer</span><span class="p">&gt;(</span><span class="n">customer</span> <span class="p">=&gt;</span>
+        <span class="n">customer</span><span class="p">.</span><span class="n">Address</span><span class="p">.</span><span class="n">Where</span><span class="p">&lt;</span><span class="n">Address</span><span class="p">&gt;(</span><span class="n">address</span> <span class="p">=&gt;</span> <span class="n">address</span><span class="p">.</span><span class="n">PinCode</span> <span class="p">==</span> <span class="m">500016</span><span class="p">));</span>
+    <span class="n">dataContext</span><span class="p">.</span><span class="n">LoadOptions</span> <span class="p">=</span> <span class="n">dataLoadOptions</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="disable-object-tracking">Disable Object Tracking</h2>
+
+<p>You can disable object tracking for the entire <code class="language-plaintext highlighter-rouge">DbContext</code> by setting <code class="language-plaintext highlighter-rouge">dbContext.ObjectTrackingEnabled = false</code>, but when using DI, it’s better to explicitly disable tracking on the queries itself using <code class="language-plaintext highlighter-rouge">AsNoTracking</code> as demonstrated in the examples above.</p>
+
+<h2 id="disable-optimistic-concurrency">Disable Optimistic Concurrency</h2>
+
+<p>Concurrency handling enables you to detect and resolve conflicts that arise out of concurrent requests to the same resource. You should turn it off when not needed, you can use the <code class="language-plaintext highlighter-rouge">UpdateCheck</code> property of the <code class="language-plaintext highlighter-rouge">ColumnAttribute</code> to turn it off:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="nf">Column</span><span class="p">(</span><span class="n">Storage</span><span class="p">=</span><span class="s">"_Address"</span><span class="p">,</span> <span class="n">UpdateCheck</span><span class="p">=</span><span class="n">UpdateCheck</span><span class="p">.</span><span class="n">Never</span><span class="p">)]</span>
+</code></pre></div></div>
+
+<h2 id="analyze-linq-queries">Analyze LINQ queries</h2>
+
+<p>Monitor the generated SQL and understand how your LINQ has been translated. You can turn on the <code class="language-plaintext highlighter-rouge">Log</code> property of the <code class="language-plaintext highlighter-rouge">DbContext</code> to see the generated SQL or use <a href="https://www.linqpad.net/">LINQPad</a> to tune the query.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">dbContext</span><span class="p">.</span><span class="n">Log</span> <span class="p">=</span> <span class="n">Console</span><span class="p">.</span><span class="n">Out</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h2 id="code-first">Code First</h2>
+
+<h3 id="data-annotations-vs-fluent-api">Data Annotations vs Fluent API</h3>
+
+<p>Everything you can configure with DataAnnotations (attributes) is also possible with Fluent API, but the reverse is not true. The limitations of DataAnnotations are quickly reached (except for extremely simple entity models). We aim to use Fluent API for most applications.</p>
+
+<p>Because of Fluent API:</p>
+
+<ul>
+  <li>Model classes aren’t buffed with annotations</li>
+  <li>Navigation properties don’t need to be declared virtual</li>
+  <li>Implementation logic stays in your <code class="language-plaintext highlighter-rouge">DbContext</code></li>
+</ul>
+
+<p>To write Fluent API configurations, just override the <code class="language-plaintext highlighter-rouge">OnModelCreating()</code> method of the <code class="language-plaintext highlighter-rouge">DbContext</code> in the application specific context class.</p>
+
+<h4 id="example-from-our-aspnet-mvc-repository-pattern-demo-application">Example from our ASP.NET MVC: Repository Pattern demo application:</h4>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">namespace</span> <span class="nn">Store.Data</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">class</span> <span class="nc">StoreEntities</span> <span class="p">:</span> <span class="n">DbContext</span>
+    <span class="p">{</span>
+        <span class="k">protected</span> <span class="k">override</span> <span class="k">void</span> <span class="nf">OnModelCreating</span><span class="p">(</span><span class="n">DbModelBuilder</span> <span class="n">modelBuilder</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">modelBuilder</span><span class="p">.</span><span class="n">Configurations</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="k">new</span> <span class="nf">GadgetConfiguration</span><span class="p">());</span>
+            <span class="n">modelBuilder</span><span class="p">.</span><span class="n">Configurations</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="k">new</span> <span class="nf">CategoryConfiguration</span><span class="p">());</span>
+        <span class="p">}</span>
+
+        <span class="k">public</span> <span class="nf">StoreEntities</span><span class="p">()</span> <span class="p">:</span> <span class="k">base</span><span class="p">(</span><span class="s">"StoreEntities"</span><span class="p">)</span>
+        <span class="p">{</span>
+        <span class="p">}</span>
+
+        <span class="k">public</span> <span class="k">virtual</span> <span class="n">DbSet</span><span class="p">&lt;</span><span class="n">Gadget</span><span class="p">&gt;</span> <span class="n">Gadgets</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+        <span class="k">public</span> <span class="k">virtual</span> <span class="n">DbSet</span><span class="p">&lt;</span><span class="n">Category</span><span class="p">&gt;</span> <span class="n">Categories</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+
+        <span class="k">public</span> <span class="k">virtual</span> <span class="k">void</span> <span class="nf">Commit</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="k">base</span><span class="p">.</span><span class="nf">SaveChanges</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="entity-type-configurations">Entity Type Configurations</h3>
+
+<p>In the code snippet above, we see <code class="language-plaintext highlighter-rouge">EntityTypeConfiguration</code> classes added to the <code class="language-plaintext highlighter-rouge">modelBuilder</code>. In these configuration classes, we define the configuration for a specific entity.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">class</span> <span class="nc">CategoryConfiguration</span> <span class="p">:</span> <span class="n">EntityTypeConfiguration</span><span class="p">&lt;</span><span class="n">Category</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="nf">CategoryConfiguration</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="nf">ToTable</span><span class="p">(</span><span class="s">"Categories"</span><span class="p">);</span>
+        <span class="nf">Property</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="n">c</span><span class="p">.</span><span class="n">Name</span><span class="p">).</span><span class="nf">IsRequired</span><span class="p">().</span><span class="nf">HasMaxLength</span><span class="p">(</span><span class="m">50</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>

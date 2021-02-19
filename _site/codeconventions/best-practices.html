@@ -1,0 +1,169 @@
+<h2 id="startup-class-and-services">Startup class and Services</h2>
+
+<h3 id="servicecollection-extension-pattern">ServiceCollection Extension Pattern</h3>
+
+<p>.NET Core has a built-in DI (IoC) container. In the <code class="language-plaintext highlighter-rouge">ConfigureServices()</code> method in the <code class="language-plaintext highlighter-rouge">startup.cs</code> file in the host <code class="language-plaintext highlighter-rouge">ASP.NET Core</code> project, services are added to the DI container.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">void</span> <span class="nf">ConfigureServices</span><span class="p">(</span><span class="n">IServiceCollection</span> <span class="n">services</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="p">....</span>
+    <span class="n">services</span><span class="p">.</span><span class="n">AddTransient</span><span class="p">&lt;</span><span class="n">IUserService</span><span class="p">,</span> <span class="n">UserService</span><span class="p">&gt;();</span>
+    <span class="n">services</span><span class="p">.</span><span class="n">AddScoped</span><span class="p">&lt;</span><span class="n">ISweetMustardService</span><span class="p">,</span> <span class="n">SweetMustardService</span><span class="p">&gt;();</span>
+    <span class="n">services</span><span class="p">.</span><span class="n">AddScoped</span><span class="p">&lt;</span><span class="n">IProductRepository</span><span class="p">,</span> <span class="n">ProductRepository</span><span class="p">&gt;();</span>
+    <span class="n">services</span><span class="p">.</span><span class="n">AddScoped</span><span class="p">&lt;</span><span class="n">IMustardRepository</span><span class="p">,</span> <span class="n">MustardRepository</span><span class="p">&gt;();</span>
+    <span class="n">services</span><span class="p">.</span><span class="n">TryAddSingleton</span><span class="p">&lt;</span><span class="n">GraphQLQuery</span><span class="p">&gt;();</span>
+    <span class="p">...</span>
+
+	<span class="n">services</span><span class="p">.</span><span class="nf">AddMvc</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p><code class="language-plaintext highlighter-rouge">ConfigureServices</code> should be clean and readable. We can extract chunks of code from the startup class to extension methods.</p>
+
+<p><strong>Example</strong></p>
+
+<p>The <code class="language-plaintext highlighter-rouge">Data</code> layer in your solution holds repositories, and we need to add these to the DI container. We can create our own extension method that registers all the repositories. This method accepts parameter <code class="language-plaintext highlighter-rouge">this IServiceCollection</code> so we can bind our variables and return the <code class="language-plaintext highlighter-rouge">IServiceCollection</code> instance with the services registered.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">static</span> <span class="k">class</span> <span class="nc">ServicesConfiguration</span>
+<span class="p">{</span>
+	<span class="k">public</span> <span class="k">static</span> <span class="k">void</span> <span class="nf">AddRepositories</span><span class="p">(</span><span class="k">this</span> <span class="n">IServiceCollection</span> <span class="n">services</span><span class="p">)</span>
+	<span class="p">{</span>
+		<span class="n">services</span><span class="p">.</span><span class="n">AddTransient</span><span class="p">&lt;</span><span class="n">IUserRepository</span><span class="p">,</span> <span class="n">UserRepository</span><span class="p">&gt;();</span>
+        <span class="n">services</span><span class="p">.</span><span class="n">AddTransient</span><span class="p">&lt;</span><span class="n">IProductRepository</span><span class="p">,</span> <span class="n">ProductRepository</span><span class="p">&gt;();</span>
+        <span class="p">...</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>After referencing the <code class="language-plaintext highlighter-rouge">Data</code> project to your <code class="language-plaintext highlighter-rouge">ASP.NET Core</code> host project, you can add the services to the container in the <code class="language-plaintext highlighter-rouge">ConfigureServices()</code> method in the <code class="language-plaintext highlighter-rouge">startup.cs</code> file in a nice and clean way:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">void</span> <span class="nf">ConfigureServices</span><span class="p">(</span><span class="n">IServiceCollection</span> <span class="n">services</span><span class="p">)</span>
+<span class="p">{</span>
+	<span class="n">services</span><span class="p">.</span><span class="nf">AddMvc</span><span class="p">();</span>
+	<span class="n">services</span><span class="p">.</span><span class="nf">AddRepositories</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p><code class="language-plaintext highlighter-rouge">IServiceCollection</code> is not part of the .NET Standard.</p>
+</blockquote>
+
+<h3 id="middleware">Middleware</h3>
+
+<p>In <code class="language-plaintext highlighter-rouge">ASP.NET</code> we had modules, handlers a <code class="language-plaintext highlighter-rouge">web.config</code> file. In <code class="language-plaintext highlighter-rouge">ASP.NET Core</code> there is middleware, which is also set up in the startup class.</p>
+
+<p>Middleware controls how the application responds <code class="language-plaintext highlighter-rouge">HTTP</code> requests, and we define these pieces in the <code class="language-plaintext highlighter-rouge">Configure()</code> method. We do this by using the <code class="language-plaintext highlighter-rouge">IApplicationBuilder</code> instance, and there are 4 methods to interact with a request.</p>
+
+<p><strong>Use</strong> adds a middleware to the pipeline and it can pass the request to the next delegate, or end it.
+<strong>Map</strong> is used to connect a request path with another middleware.
+<strong>MapWhen</strong> is almost the same as <strong>Map</strong>, but we can specify the detailed condition by using a <code class="language-plaintext highlighter-rouge">HttpContext</code> object.
+<strong>Run</strong> adds a terminal middleware delegate to the application’s request pipeline.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">void</span> <span class="nf">Configure</span><span class="p">(</span><span class="n">IApplicationBuilder</span> <span class="n">app</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">app</span><span class="p">.</span><span class="nf">Map</span><span class="p">(</span><span class="s">"/route"</span><span class="p">,</span> <span class="n">HandleRouteMethod</span><span class="p">);</span>
+
+    <span class="n">app</span><span class="p">.</span><span class="nf">Use</span><span class="p">(</span><span class="k">async</span> <span class="k">delegate</span> <span class="p">(</span><span class="n">HttpContext</span> <span class="n">context</span><span class="p">,</span> <span class="n">Func</span><span class="p">&lt;</span><span class="n">Task</span><span class="p">&gt;</span> <span class="n">next</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">await</span> <span class="n">next</span><span class="p">.</span><span class="nf">Invoke</span><span class="p">();</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="k">private</span> <span class="k">static</span> <span class="k">void</span> <span class="nf">HandleRouteMethod</span><span class="p">(</span><span class="n">IApplicationBuilder</span> <span class="n">app</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">app</span><span class="p">.</span><span class="nf">Run</span><span class="p">(</span><span class="k">async</span> <span class="n">context</span> <span class="p">=&gt;</span> 
+    <span class="p">{</span>
+        <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">Response</span><span class="p">.</span><span class="nf">WriteAsync</span><span class="p">(</span><span class="s">"Sweetness from new route"</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h4 id="creating-middleware">Creating middleware</h4>
+
+<p>Basically, you move the code in the <code class="language-plaintext highlighter-rouge">Use</code> method to a separate class. To be able to use this we will have to make a extension method.</p>
+
+<p>Example implementation of global error handling middleware:</p>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">class</span> <span class="nc">CustomExceptionMiddleware</span>
+<span class="p">{</span>
+    <span class="k">private</span> <span class="k">readonly</span> <span class="n">RequestDelegate</span> <span class="n">_next</span><span class="p">;</span>
+    <span class="k">private</span> <span class="k">readonly</span> <span class="n">ILogger</span><span class="p">&lt;</span><span class="n">SampleMiddleware</span><span class="p">&gt;</span> <span class="n">_logger</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="nf">SampleMiddleware</span><span class="p">(</span><span class="n">RequestDelegate</span> <span class="n">next</span><span class="p">,</span> <span class="n">ILogger</span><span class="p">&lt;</span><span class="n">SampleMiddleware</span><span class="p">&gt;</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">_next</span> <span class="p">=</span> <span class="n">next</span><span class="p">;</span>
+        <span class="n">_logger</span> <span class="p">=</span> <span class="n">logger</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">async</span> <span class="n">Task</span> <span class="nf">Invoke</span><span class="p">(</span><span class="n">HttpContext</span> <span class="n">httpContext</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">try</span>
+        <span class="p">{</span>
+            <span class="k">await</span> <span class="nf">_next</span><span class="p">(</span><span class="n">httpContext</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">catch</span> <span class="p">(</span><span class="n">Exception</span> <span class="n">ex</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">_logger</span><span class="p">.</span><span class="nf">LogError</span><span class="p">(</span><span class="n">ex</span><span class="p">,</span> <span class="s">"Unhandled exception ..."</span><span class="p">);</span>
+            <span class="k">await</span> <span class="nf">HandleExceptionAsync</span><span class="p">(</span><span class="n">httpContext</span><span class="p">,</span> <span class="n">ex</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Extension method:</p>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">static</span> <span class="k">class</span> <span class="nc">CustomExceptionMiddlewareExtension</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">static</span> <span class="n">IApplicationBuilder</span> <span class="nf">UseCustomExceptionMiddleware</span><span class="p">(</span><span class="k">this</span> <span class="n">IApplicationBuilder</span> <span class="n">builder</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="n">builder</span><span class="p">.</span><span class="n">UseMiddleware</span><span class="p">&lt;</span><span class="n">CustomExceptionMiddleware</span><span class="p">&gt;();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Just like the services in the <code class="language-plaintext highlighter-rouge">Service Collection Extension Pattern</code> section above, we can now add this middleware in 1 line to our startup class, in the <code class="language-plaintext highlighter-rouge">Configure()</code> method.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">void</span> <span class="nf">Configure</span><span class="p">(</span><span class="n">IApplicationBuilder</span> <span class="n">app</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="p">...</span>
+    <span class="n">app</span><span class="p">.</span><span class="nf">UseCustomExceptionMiddleware</span><span class="p">();</span>
+
+    <span class="n">app</span><span class="p">.</span><span class="nf">Use</span><span class="p">(</span><span class="k">async</span> <span class="k">delegate</span> <span class="p">(</span><span class="n">HttpContext</span> <span class="n">context</span><span class="p">,</span> <span class="n">Func</span><span class="p">&lt;</span><span class="n">Task</span><span class="p">&gt;</span> <span class="n">next</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">await</span> <span class="n">next</span><span class="p">.</span><span class="nf">Invoke</span><span class="p">();</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="validation">Validation</h2>
+
+<h3 id="use-data-annotations-for-server-side-validation">Use data annotations for server-side validation</h3>
+
+<p>Use the <code class="language-plaintext highlighter-rouge">System.ComponentModel.DataAnnotations</code> namespace to access annotations for server side validation.</p>
+
+<p><strong>Note:</strong> server-side validation is mandatory.</p>
+
+<p>In our example we demonstrate server side vaidation through <code class="language-plaintext highlighter-rouge">DataAnnotations</code> when creating a new user.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">class</span> <span class="nc">CreateUserViewModel</span>
+<span class="p">{</span>
+    <span class="p">[</span><span class="nf">Required</span><span class="p">(</span><span class="n">ErrorMessage</span><span class="p">=</span><span class="s">"Username is mandatory"</span><span class="p">)]</span>
+    <span class="p">[</span><span class="nf">MaxLength</span><span class="p">(</span><span class="m">100</span><span class="p">)]</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">Name</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="modelstate">Modelstate</h3>
+
+<p>In the controller, we can check if the <code class="language-plaintext highlighter-rouge">modelstate</code> is valid. <code class="language-plaintext highlighter-rouge">ModelState.IsValid</code> determines wether the submitted values statisfy all <code class="language-plaintext highlighter-rouge">DataAnnotation</code> validation attributes applied to the model properties.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="n">HttpPost</span><span class="p">]</span>
+<span class="k">public</span> <span class="n">ActionResult</span> <span class="nf">CreateUser</span><span class="p">(</span><span class="n">CreateUserViewModel</span> <span class="n">createUserForm</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">ModelState</span><span class="p">.</span><span class="n">IsValid</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">//Code to create user</span>
+    <span class="p">}</span>
+
+    <span class="c1">//Code to handle invalid form</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="validation-feedback-to-client">Validation feedback to client</h3>
+<p>ProblemDetails?</p>

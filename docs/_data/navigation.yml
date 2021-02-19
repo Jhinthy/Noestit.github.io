@@ -8,15 +8,35 @@
 
      
  editorconfig:
-   - title: "EditorConfig"
+   - title: "Tooling"
      children:
       - title: "Base setup"
         url: /editorconfig/core-options
       - title: "Coding Conventions"
         url: /editorconfig/coding-conventions
+      - title: "Tooling"
+        url: /editorconfig/tooling     
 
  codeconventions:
    - title: "Code Conventions"
      children:
       - title: "Main"
         url: /codeconventions/index
+      - title: "Best practices"
+        url: /codeconventions/best-practices
+      - title: "EF & Linq"
+        url: /codeconventions/entity-framework-linq
+      - title: "Logging"
+        url: /codeconventions/logging
+      - title: "TDD unit testing"
+        url: /codeconventions/tdd-unit-testing
+
+ codeguidelines:
+   - title: "Code Guidelines"
+     children:
+      - title: "Coding Style"
+        url: /codeguidelines/coding-style
+      - title: "Folder structure"
+        url: /codeguidelines/folder-structure
+      - title: "Globalization"
+        url: /codeguidelines/globalization
