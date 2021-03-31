@@ -1,6 +1,6 @@
 ---
 layout: single
-title: 'EF & Linq'
+title: "EF & Linq"
 permalink: /codeconventions/entity-framework-linq
 
 sidebar:
@@ -18,10 +18,10 @@ This article describes some best practices and performance improving principles 
 
 There are two ways to write LINQ queries
 
-* LINQ Query Expression
-* LINQ Extension Methods (method based queries)
+- LINQ Query Expression
+- LINQ Extension Methods (method based queries)
 
-At Sweet Mustard, we aim to always use **LINQ Extension Methods**. Method based queries are very readable and allow you to use custom extension methods that will still read fine. Since not all operators are available when using LINQ Query Expressions, you quickly end up with a mixed syntax.
+At Noest, we aim to always use **LINQ Extension Methods**. Method based queries are very readable and allow you to use custom extension methods that will still read fine. Since not all operators are available when using LINQ Query Expressions, you quickly end up with a mixed syntax.
 
 ### LINQ Query example
 
@@ -32,7 +32,7 @@ var query = (from p in dbContext.Products.AsNoTracking()
              select p).Into("MyTable");
 ```
 
-### LINQ Exentsion Method example
+### LINQ extension method example
 
 ```csharp
 var query = dbContext.Products
@@ -48,8 +48,8 @@ Entity Framework supports multiple ways to load related entities (that is, when 
 
 ### When to use Eager Loading
 
-* In one side of a one-to-many relationship where you always need the related entity, f.e. the category of a product.
-* Generally when relations are not too heavy, eager loading will reduce the amount of queries sent to the server.
+- In one side of a one-to-many relationship where you always need the related entity, f.e. the category of a product.
+- Generally when relations are not too heavy, eager loading will reduce the amount of queries sent to the server.
 
 #### Example
 
@@ -64,8 +64,8 @@ var user = dbContext.Users
 
 ### When to use Lazy Loading
 
-* Almost on every 'collection side' of one-to-many relations, f.e. products of a category.
-* You know exactly you will not need a property.
+- Almost on every 'collection side' of one-to-many relations, f.e. products of a category.
+- You know exactly you will not need a property.
 
 **Example**
 
@@ -169,37 +169,37 @@ Everything you can configure with DataAnnotations (attributes) is also possible 
 
 Because of Fluent API:
 
-* Model classes aren't buffed with annotations
-* Navigation properties don't need to be declared virtual
-* Implementation logic stays in your `DbContext`
+- Model classes aren't buffed with annotations
+- Navigation properties don't need to be declared virtual
+- Implementation logic stays in your `DbContext`
 
 To write Fluent API configurations, just override the `OnModelCreating()` method of the `DbContext` in the application specific context class.
 
-#### Example from our ASP.NET MVC: Repository Pattern demo application:
+#### Example from our ASP .NET MVC Repository Pattern demo application:
 
- ```csharp
+```csharp
 namespace Store.Data
 {
-    public class StoreEntities : DbContext
-    {
-        protected override void OnModelCreating(DbModelBuilder modelBuilder)
-        {
-            modelBuilder.Configurations.Add(new GadgetConfiguration());
-            modelBuilder.Configurations.Add(new CategoryConfiguration());
-        }
+   public class StoreEntities : DbContext
+   {
+       protected override void OnModelCreating(DbModelBuilder modelBuilder)
+       {
+           modelBuilder.Configurations.Add(new GadgetConfiguration());
+           modelBuilder.Configurations.Add(new CategoryConfiguration());
+       }
 
-        public StoreEntities() : base("StoreEntities")
-        {
-        }
+       public StoreEntities() : base("StoreEntities")
+       {
+       }
 
-        public virtual DbSet<Gadget> Gadgets { get; set; }
-        public virtual DbSet<Category> Categories { get; set; }
+       public virtual DbSet<Gadget> Gadgets { get; set; }
+       public virtual DbSet<Category> Categories { get; set; }
 
-        public virtual void Commit()
-        {
-            base.SaveChanges();
-        }
-    }
+       public virtual void Commit()
+       {
+           base.SaveChanges();
+       }
+   }
 }
 ```
 

@@ -1,6 +1,6 @@
 ---
 layout: single
-title: 'Noest coding conventions'
+title: "Noest coding conventions"
 permalink: /codeconventions/index
 
 sidebar:
@@ -10,8 +10,6 @@ sidebar:
 # Welcome to the Noest code conventions
 
 In this section you can find our coding guidelines, best practices and conventions for software development in .NET. Click on a link in the sidebar to navigate through our modules. This is **live documentation** meaning it will be edited and extended on a frequent basis.
-
-
 
 ## EditorConfig
 
@@ -160,7 +158,8 @@ private readonly TimeSpan _cookieLifetime = TimeSpan.FromDays(7);
 ### DO NOT omit acces modifiers
 
 Declare all identifiers with the appropriate acces modifier instead of allowing the default
-``` csharp
+
+```csharp
 // Bad
 void MethodName(string parameter);
 

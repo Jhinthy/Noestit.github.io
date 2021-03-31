@@ -16,15 +16,14 @@ sidebar:
 ```csharp
 public void ConfigureServices(IServiceCollection services)
 {
+    services.AddControllers();
+
     ....
     services.AddTransient<IUserService, UserService>();
-    services.AddScoped<ISweetMustardService, SweetMustardService>();
+    services.AddScoped<INoestService, NoestService>();
     services.AddScoped<IProductRepository, ProductRepository>();
-    services.AddScoped<IMustardRepository, MustardRepository>();
     services.TryAddSingleton<GraphQLQuery>();
     ...
-
-	services.AddMvc();
 }
 ```
 
@@ -35,15 +34,20 @@ public void ConfigureServices(IServiceCollection services)
 The `Data` layer in your solution holds repositories, and we need to add these to the DI container. We can create our own extension method that registers all the repositories. This method accepts parameter `this IServiceCollection` so we can bind our variables and return the `IServiceCollection` instance with the services registered.
 
 ```csharp
+using Microsoft.Extensions.DependencyInjection;
+
 public static class ServicesConfiguration
 {
-	public static void AddRepositories(this IServiceCollection services)
-	{
-		services.AddTransient<IUserRepository, UserRepository>();
+    public static IServiceCollection AddRepositories(this IServiceCollection services)
+    {
+        services.AddTransient<IUserRepository, UserRepository>();
         services.AddTransient<IProductRepository, ProductRepository>();
         ...
-	}
+        return services;
+    }
 }
+
+
 ```
 
 After referencing the `Data` project to your `ASP.NET Core` host project, you can add the services to the container in the `ConfigureServices()` method in the `startup.cs` file in a nice and clean way:
@@ -51,12 +55,12 @@ After referencing the `Data` project to your `ASP.NET Core` host project, you ca
 ```csharp
 public void ConfigureServices(IServiceCollection services)
 {
-	services.AddMvc();
-	services.AddRepositories();
+    services.AddControllers();
+    services.AddRepositories();
 }
 ```
 
-> `IServiceCollection` is not part of the .NET Standard.
+> `IServiceCollection` is not part of the .NET Standard. Install the latest `Microsoft.Extensions.DependencyInjection.Abstractions` package for this use.
 
 ### Middleware
 
@@ -84,7 +88,7 @@ private static void HandleRouteMethod(IApplicationBuilder app)
 {
     app.Run(async context =>
     {
-        await context.Response.WriteAsync("Sweetness from new route");
+        await context.Response.WriteAsync("Hello from the other route");
     });
 }
 ```
