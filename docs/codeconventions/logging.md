@@ -1,29 +1,34 @@
 ---
 layout: single
-title: 'Logging'
+title: "Logging"
 permalink: /codeconventions/logging
 
 sidebar:
   nav: "codeconventions"
 ---
 
-## Introduction
+## Logging
 
-Logging is a critical part in any application. When the end-user faces an error or unexpected behavior in the application, you want to have a trace or at least some pointer at what went wrong. Logging exceptions with a stacktrace is very helpful in that regard, while for some complex operations, you might decide to log additional side information to better understand the program flow. To distinguish trace data from error data, any decent logging framework also logs a level with each message and allows you to decide which level of messages you actually want to store.
+### Introduction
 
-A lot of logging frameworks exist but two of them are quite popular in the .NET world:
+Logging is a critical part in any application. When the end-user is faced with an error or unexpected behavior in the application, you want to have a trace or at least some pointer as to what went wrong. Logging exceptions with a stacktrace is very useful in that regard, while for some complex operations, you might decide to log additional side information to better understand the program flow. To distinguish trace data from error data, any decent logging framework also logs a level with each message and allows you to decide which level of messages you actually want to store.
 
-* log4net [NuGet](https://www.nuget.org/packages/log4net/)
-* Serilog [NuGet](https://www.nuget.org/packages/serilog/)
-* Microsoft.Extensions.Logging [Microsoft docs](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-5.0)
+Build-in logging:
+
+- Microsoft.Extensions.Logging [Microsoft docs](https://docs.microsoft.com/en-us/dotnet/core/extensions/logging?tabs=command-line)
+
+A lot of third-party logging frameworks exist but two of them are quite popular in the .NET world:
+
+- log4net [NuGet](https://www.nuget.org/packages/log4net/)
+- Serilog [NuGet](https://www.nuget.org/packages/serilog/)
 
 Compared to log4net, Serilog has additional support for [structured logging](https://github.com/serilog/serilog/wiki/Structured-Data) so could be the better choice for more complex applications.
 
 Both of these frameworks have a lot of different output methods: they can write to a file, write to a console, write to Windows Event log, write as XML, write as plain-text, write to a database, write to telnet, and so on. Log4Net calls them `Appenders` while Serilog calls them `Sinks`. See [log4net features](https://logging.apache.org/log4net/release/features.html) or [Serilog sinks](https://github.com/serilog/serilog/wiki/Provided-Sinks).
 
-## Logging and unit-testing
+### Logging and unit-testing
 
-In both frameworks, you can choose to create different loggers for different context (f.e. different classes) or create one logger for the entire application. In any case, when running unit-tests, you don't want to log anything to disk or any other output, so it's advisable to inject a logging interface instead of directly calling a static `Log` class from the code.
+In the frameworks, you can choose to create different loggers for different context (f.e. different classes) or create one logger for the entire application. In any case, when running unit-tests, you don't want to log anything to disk or any other output, so it's advisable to inject a logging interface instead of directly calling a static `Log` class from the code.
 
 When a context logger per class is used, you can use this method:
 
@@ -60,14 +65,14 @@ class UserService
     }
 }
 
-// With Microsoft.Extensions.Logger
+// With Microsoft.Extensions.Logging
 class UserService
 {
-    private readonly ILogger _logger;
+    private readonly ILogger<UserService> _logger;
 
     public UserService(/* other required dependencies */, ILogger<UserService> logger = null)
     {
-        _logger = logger ?? Log.ForContext<UserService>();
+        _logger = _logger ?? new LoggerFactory().CreateLogger<UserService>();
     }
 
     public void SomeMethod()
@@ -79,11 +84,11 @@ class UserService
 
 This way, at runtime, dependency injection will not inject a logger and a context specific logger will be created in the constructor. While in unit-tests you can pass a mock logger and even verify certain logging behavior.
 
-### SeriLog
+### Serilog
 
-SeriLog is easy to set up, has a clean `API` and can be used in all recent .NET platforms.
+Serilog is easy to set up, has a clean `API` and can be used in all recent .NET platforms.
 
-**Configure SeriLog & Sinks**
+**Configure Serilog & Sinks**
 
 Create the logger using a `LoggerConfiguration` object.
 
@@ -109,13 +114,14 @@ You can configure multiple sinks, by chaining the `WriteTo` blocks. In the examp
 
 ```csharp
 Log.Logger = new LoggerConfiguration()
-    .MinimulLevel.Debug() //Override for logger
-    .WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information) //Override per sink
-    .WriteTo.File("log.txt")
-    .CreateLogger();
+        .MinimumLevel.Debug() //Override for logger
+        .Enrich.FromLogContext()
+        .WriteTo.File(path: logFilePath, rollingInterval: RollingInterval.Day, outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+        .WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information) //Override per sink
+        .CreateLogger();
 ```
 
-**Creating a custom sink***
+**Creating a custom sink**
 
 A sink is nothing more than a `class` that implements `ILogEventSink`. The example below creates a `sink` that renders every message to the console, regardless of the log level.
 
@@ -145,8 +151,8 @@ When configuring a sink, a extension method can be provided.
 public static class MyCustomSinkExtensions
 {
     public static LoggerConfiguration MyCustomSink(
-              this LoggerSinkConfiguration loggerConfiguration,
-              IFormatProvider formatProvider = null)
+        this LoggerSinkConfiguration loggerConfiguration,
+        IFormatProvider formatProvider = null)
     {
         return loggerConfiguration.Sink(new MyCustomSink(formatProvider));
     }
@@ -164,5 +170,5 @@ var log = new LoggerConfiguration()
 
 ## Additional resources
 
-* [Ultimate log4net Tutorial for .NET Logging](https://stackify.com/log4net-guide-dotnet-logging/)
-* [Serilog tutorial](https://blog.getseq.net/serilog-tutorial/)
+- [Ultimate log4net Tutorial for .NET Logging](https://stackify.com/log4net-guide-dotnet-logging/)
+- [Serilog tutorial](https://blog.getseq.net/serilog-tutorial/)
