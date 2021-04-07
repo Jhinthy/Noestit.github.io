@@ -141,7 +141,7 @@ public void AnotherMethod()
 
 ### Usage of regions
 
-Regions are a way to structure large blocks of code. However, since we believe in small methods and classes, we will not allow the usage of regions.
+Regions are a way to structure large blocks of code. However, since we believe in small methods and classes, we will **not** allow the usage of regions.
 
 ### Working with lots of arguments
 
@@ -178,6 +178,45 @@ accountController.AddAccount(command.Username, command.Email);
 ```
 
 ### Value tuples
+
+A tuple is a data structure that contains a sequence of elements of different data types. It can be used where you want to have a data structure to hold an object with properties, but you don't want to create a separate type for it. [source](https://www.c-sharpcorner.com/blogs/tuples-in-c-sharp)
+
+Use the named members notation.
+
+```csharp
+// BAD
+ (string, int) person1 = ("John Doe", 31);
+ Console.WriteLine($"Tuple with elements {person1.Item1} and {person1.Item2}.");
+
+// Good
+(string Name, int Age) person2 = ("John Doe", 31);
+Console.WriteLine($"Sum of {person2.Name} elements is {person2.Age}.");
+```
+
+Use cases:
+
+- Instead of out parameters
+- When you need to return two classes this could come in handy, you don't want to generate a composed class or a class that's only used for one method.
+- If you only wish to return two values for a method and the class would only be used for that method, having a class might seem like too much.
+
+```csharp
+// Using out:
+GetPerson(out string name, out int age);
+
+object person = new {
+    Name = name,
+    Age = age
+};
+
+// Using Tuple class:
+(string Name, int Age) person = GetPerson();
+```
+
+```csharp
+(Customer Customer, Basket Basket) customerWithBasket = GetCustomerWithBasket(1);
+```
+
+**Note:** Be cautious when using `ValueTuples`
 
 The use of C# 7 `ValueTuple` is only allowed in private methods. Any public method should not take or return a `ValueTuple`.
 
@@ -227,9 +266,49 @@ else
     second_expression;
 }
 
-// Conditional expression
+// Ternary conditional expression (?:)
 IsValid ? expression : second_expression;
 ```
+
+You can simplify nested null checks with the conditional operator.
+
+```csharp
+if (something != null)
+{
+    if (something.Other != null)
+    {
+        return something.Other.Child;
+    }
+}
+
+// Conditional (?.) operator
+return something?.Other?.Child;
+```
+
+The null-coalescing operator returns the left-side of the check is it isn't null. Else it returns the right side.
+
+```csharp
+if (something != null)
+{
+    return string.empty;
+}
+
+// Null-coalescing (??) operator
+return something ?? string.empty;
+
+
+
+int? number = null;
+var n = number.HasValue ? number : 0;
+
+// Null coalescing (??) operator
+var n = number ?? 0;
+
+// Alternative for numbers : GetValueOrDefault() if you want to return the default value of the underlaying value type.
+var n = number.GetValueOrDefault();
+```
+
+We don't force one way or the other, just use what is the most readable / understandable for the given situation.
 
 ### Input parameters in lambda expressions
 
@@ -242,4 +321,44 @@ var enabledUsers = users.Where(user => user.IsEnabled);
 
 // Bad
 var enabledUsers = users.Where(w => w.IsEnabled);
+```
+
+### Concatenating strings
+
+Avoid using '+' to concatenate text into a new string.
+
+```csharp
+string name = "John";
+string greetings = "Hello " + name + "!";
+
+//Good: string.Format()
+string greetingFormat = string.Format("Hello {0}!", name);
+
+//Better: string interpolation (${})
+string greeting = $"Hello, {name}!";
+```
+
+When you need to execute multiple changes to a string, creating a new String object will cause overhead. If you find yourself in this situation it is best to use `System.Text.StringBuilder` class.
+
+If you want to use the [StringBuilder](https://docs.microsoft.com/en-us/dotnet/standard/base-types/stringbuilder) object you must pass it to a string object. This can easily be done via `.ToString()`.
+
+```csharp
+using System.Text;
+
+StringBuilder stringBuilder = new StringBuilder("Hello! ");
+stringBuilder.Append("What a beautiful day. ");
+stringBuilder.AppendLine("Let's count numbers");
+
+for (int i = 0; i < 4; i++)
+{
+    stringBuilder.AppendLine($"{i}.");
+}
+
+Console.WriteLine(stringBuilder.ToString());
+
+// Hello! What a beautiful day. Let's count numbers
+// 0.
+// 1.
+// 2.
+// 3.
 ```

@@ -1,6 +1,6 @@
 ---
 layout: single
-title: 'Globalization'
+title: "Globalization"
 permalink: /codeguidelines/globalization
 
 sidebar:
@@ -24,7 +24,7 @@ For each language we add a `LANGUAGE.resx` resource file inside the resources `c
 
 <img src="./../assets/resxnl.png" alt="Nederlands resources" >
 
-* Note that the resource name of correspondending translations must be the same.
+- Note that the resource name of correspondending translations must be the same.
 
 **ResX Manager Visual Studio Extension**
 
@@ -54,7 +54,7 @@ Inside our application, we can replace all hardcoded string with these translati
         }
     </table>
 </div>
- ```
+```
 
 **Data Annotations example**
 
@@ -67,15 +67,16 @@ public class CreateUserViewModel
     public string Name { get; set; }
 }
 ```
- * In above example, the `errorMessage` will show the correct message, depending on user's selected culture.
 
- The `DisplayName` attribute in above example is what will be displayed on the `View` when calling that property name.
+- In above example, the `errorMessage` will show the correct message, depending on user's selected culture.
 
- ```
- @Html.LabelFor(model => model.Name)
+The `DisplayName` attribute in above example is what will be displayed on the `View` when calling that property name.
+
+```
+@Html.LabelFor(model => model.Name)
 @Html.ValidationMessageFor(model => model.Name)
- ```
+```
 
-* Above ` HTML helpers` will display the correct translation depending on browser language / culture settings.
+- Above ` HTML helpers` will display the correct translation depending on browser language / culture settings.
 
-* You can use translations for every string on your application. You can store full paragraphs if needed. Just add the reference to the resources library and you can use them in your view simply by calling `@Resources.ResourceName`
+- You can use translations for every string on your application. You can store full paragraphs if needed. Just add the reference to the resources library and you can use them in your view simply by calling `@Resources.ResourceName`

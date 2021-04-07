@@ -1,13 +1,13 @@
 ---
 layout: single
-title: 'TDD unit testing'
+title: "TDD unit testing"
 permalink: /codeconventions/tdd-unit-testing
 
 sidebar:
   nav: "codeconventions"
 ---
 
-## Introduction
+## Test Driven Design (TDD) and Unit Testing
 
 In order maximize testability of our code, we follow these rules and best practices.
 
@@ -45,11 +45,11 @@ We try to follow this convention:
 
 ## Characteristics of a good unit test
 
-* Fast: It's common for big projects to have thousands of unit tests. They should take little time to run. Milliseconds.
-* Isolated: Unit tests are stand alone, can be run in isolation, and have no dependencies on any outside factors.
-* Repeatable: Running a unit test should be consistent with its results. Always return same result if nothing has changed between runs.
-* Self-Checking: The test should detect if it has passed or failed without any human interaction.
-* Timely: A unit test should not take a disproportionally long time to write compared to the code being tested.
+- Fast: It's common for big projects to have thousands of unit tests. They should take little time to run. Milliseconds.
+- Isolated: Unit tests are stand alone, can be run in isolation, and have no dependencies on any outside factors.
+- Repeatable: Running a unit test should be consistent with its results. Always return same result if nothing has changed between runs.
+- Self-Checking: The test should detect if it has passed or failed without any human interaction.
+- Timely: A unit test should not take a disproportionally long time to write compared to the code being tested.
 
 ## Frameworks and tools
 
@@ -57,10 +57,10 @@ We try to follow this convention:
 
 There are several unit-testing frameworks available for .NET, including:
 
-* MSTest/Visual Studio (basic)
-* NUnit
-* xUnit.NET
-* MbUnit
+- MSTest/Visual Studio (basic)
+- NUnit
+- xUnit.NET
+- MbUnit
 
 [See this post](https://stackoverflow.com/questions/276829/what-can-i-use-for-good-quality-code-coverage-for-c-net "Stack overflow") for more information on different frameworks.
 
@@ -79,6 +79,7 @@ The Setup method is used to set expectations on the mock object.
 ```csharp
 userRepositoryMock.SetUp(x => x.IsDeveloper("Tim")).Returns(true);
 ```
+
 With this code, we are setting the `IsDeveloper` method on the mocked repository object.
 We define that, when the parameter is "Tim", the method should return `true`. In this case we tell the mock exactly what we want returned.
 
@@ -88,16 +89,15 @@ userRepositoryMock.SetUp(x => x.IsDeveloper(It.IsAny<Guid>())).Returns(It.IsAny<
 
 With the code example above, we don't tell exactly what we want returned. We state that when a `Guid` is passed as a parameter, a `bool` must be returned.
 
-
 ### Tools and extensions
 
 Tools used to check unit testing / code coverage. Most of these tools require a purchase, and/or have a free trial period.
 
-* Ncrunch
-* NCover
-* dotCover
+- Ncrunch
+- NCover
+- dotCover
 
- [See this post](https://stackoverflow.com/questions/261139/nunit-vs-mbunit-vs-mstest-vs-xunit-net "Stack overflow") for more information on different tools.
+[See this post](https://stackoverflow.com/questions/261139/nunit-vs-mbunit-vs-mstest-vs-xunit-net "Stack overflow") for more information on different tools.
 
 Preferred scenario is to use NUnit as unit-testing framework with ReSharper for integration in VS, though ReSharper is very expensive.
 

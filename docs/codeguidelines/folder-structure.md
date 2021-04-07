@@ -1,6 +1,6 @@
 ﻿---
 layout: single
-title: 'Folder structure'
+title: "Folder structure"
 permalink: /codeguidelines/folder-structure
 
 sidebar:
@@ -55,19 +55,19 @@ ProjectName (solution folder)
 | | ├ Product.cs
 | | └ User.cs
 | └ DataAcces (folder)
-|   ├ UnitOfWork.cs
-|   └ IUnitOfWork.cs
+| ├ UnitOfWork.cs
+| └ IUnitOfWork.cs
 ├ ServiceLayer (Folder)
 | ├ Services/
 | | ├ ProductService.cs
 | | └ UserService.cs
 | └ Utils/
-|   ├ ViewModelFactory.cs
-|   └ ProductLogic.cs
+| ├ ViewModelFactory.cs
+| └ ProductLogic.cs
 ├ PresentationLayer (Web.UI Project)
 | ├ Views/
 | | ├ Index.cshtml
-| | └ _userPartial.cshtml
+| | └ \_userPartial.cshtml
 | ├ Scripts/
 | | ├ JavaScript.js
 | | └ jQuery.min.js
@@ -103,15 +103,15 @@ Command/ (solution folder)
 | | ├ Product.cs
 | | └ User.cs
 | └ Exceptions/
-|   ├ ProductExceptions.cs
-|   └ UserExceptions.cs
+| ├ ProductExceptions.cs
+| └ UserExceptions.cs
 ├ SomeNamespace.Command.Domain.Tests (project)
 | ├ CommandHandlers/
 | | ├ ProductCommandHandlersTests.cs
 | | └ UserCommandHandlersTests.cs
 | └ Entities/
-|   ├ ProductTests.cs
-|   └ UserTests.cs
+| ├ ProductTests.cs
+| └ UserTests.cs
 ├ SomeNamespace.Command.Host (servicehost or webhost project)
 ├ SomeNamespace.Command.Host.Tests (project)
 └ ...
@@ -131,9 +131,9 @@ Query/ (solution folder)
 ```markdown
 Solution Items/ (solution folder)
 └ Templates/ (solution folder)
-  ├ Base.tt
-  ├ Header.tt
-  └ TypeDefinition.tt
+├ Base.tt
+├ Header.tt
+└ TypeDefinition.tt
 ```
 
 ### Messages project (CQRS/ES sample)
@@ -150,5 +150,5 @@ SomeNamespace.Messages (project)
 ├ Commands.tt
 | └ Commands.cs (generated)
 └ Events.tt
-  └ Events.cs (generated)
+└ Events.cs (generated)
 ```
